@@ -7,9 +7,8 @@ public interface IRoomGrain : IGrainWithStringKey
 {
     Task JoinAsync(PlayerInfo player);
     Task<PlayerState[]> GetPlayersAsync();
-    Task BetAsync(string playerId, int amount);
-    Task FoldAsync(string playerId);
     Task<GameState> GetStateAsync();
+    Task StartGameAsync();
 }
 
 [GenerateSerializer]
@@ -36,6 +35,7 @@ public record GameState
     [Id(0)] public required string[] CommunityCards { get; init; }
     [Id(1)] public int Pot { get; init; }
     [Id(2)] public required string CurrentTurnPlayerId { get; init; }
+    [Id(3)] public required string Phase { get; init; }
 }
 
 public enum PlayerActionType

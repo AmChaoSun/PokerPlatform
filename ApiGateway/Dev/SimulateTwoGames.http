@@ -1,0 +1,145 @@
+@baseUrl = http://localhost:5006
+@roomId = sim-room-001
+
+### 0) sanity: get state (room may be empty)
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+### 1) join p1
+POST {{baseUrl}}/api/room/join
+Content-Type: application/json
+
+{
+  "roomId": "{{roomId}}",
+  "playerId": "p1",
+  "nickname": "Alice"
+}
+
+### 2) join p2
+POST {{baseUrl}}/api/room/join
+Content-Type: application/json
+
+{
+  "roomId": "{{roomId}}",
+  "playerId": "p2",
+  "nickname": "Bob"
+}
+
+### 3) --- GAME #1: start ---
+POST {{baseUrl}}/api/room/{{roomId}}/start
+
+### 3.1) round 1: both act with 0 to advance (betting round completes)
+# current turn very likely p1 first (your StartGame picks first joined)
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p1",
+  "amount": 0
+}
+
+### state check
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+### p2 acts 0, should advance to FLOP
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p2",
+  "amount": 0
+}
+
+### state check (expect Phase=Flop)
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+### 3.2) flop betting: p1 0, p2 0 -> advance to TURN
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p1",
+  "amount": 0
+}
+
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p2",
+  "amount": 0
+}
+
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+### 3.3) turn betting: p1 0, p2 0 -> advance to RIVER
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p1",
+  "amount": 0
+}
+
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p2",
+  "amount": 0
+}
+
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+### 3.4) river betting: p1 0, p2 0 -> advance to SHOWDOWN/ENDED
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p1",
+  "amount": 0
+}
+
+POST {{baseUrl}}/api/room/{{roomId}}/bet
+Content-Type: application/json
+
+{
+  "playerId": "p2",
+  "amount": 0
+}
+
+### final state game #1 (Phase should be Ended; winner decided by stub)
+GET {{baseUrl}}/api/room/{{roomId}}/state
+
+
+### 4) --- GAME #2: start again ---
+POST {{baseUrl}}/api/room/{{roomId}}/start
+
+### 4.1) immediate fold by p2 to test “last standing wins”
+# Ensure it's p2's turn first? If not, place one 0 bet for p1, then fold p2.
+# Try folding p2 first; if you get “Not this player's turn”, run the extra bet below.
+
+POST {{baseUrl}}/api/room/{{roomId}}/fold
+Content-Type: application/json
+
+{
+  "playerId": "p2"
+}
+
+### (only if previous fold failed due to turn) p1 acts 0 then p2 folds
+# POST {{baseUrl}}/api/room/{{roomId}}/bet
+# Content-Type: application/json
+#
+# {
+#   "playerId": "p1",
+#   "amount": 0
+# }
+#
+# POST {{baseUrl}}/api/room/{{roomId}}/fold
+# Content-Type: application/json
+#
+# {
+#   "playerId": "p2"
+# }
+
+### final state game #2 (should be Ended after last standing)
+GET {{baseUrl}}/api/room/{{roomId}}/state
